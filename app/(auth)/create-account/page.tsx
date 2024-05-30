@@ -1,3 +1,5 @@
+"use client";
+
 import Button from "@/app/components/form-btn";
 import Input from "@/app/components/form-input";
 import { useFormState } from "react-dom";
@@ -47,7 +49,6 @@ export default function CreateAccount() {
           minLength={4}
           errors={state?.fieldErrors.confirm_password}
         />
-
         <Button text="Create account" />
       </form>
     </div>
