@@ -1,6 +1,9 @@
-import ListProduct from "@/app/components/list-product";
+import ProductScroll from "@/app/components/list-productScroll";
+
+import { Prisma } from "@prisma/client";
 import db from "@/app/lib/db";
-async function getProducts() {
+
+export async function getProducts() {
   const products = await db.product.findMany({
     select: {
       title: true,
@@ -9,17 +12,21 @@ async function getProducts() {
       photo: true,
       id: true,
     },
+    take: 1,
+    orderBy: {
+      created_at: "desc",
+    },
   });
   return products;
 }
 
+export type InitialProducts = Prisma.PromiseReturnType<typeof getProducts>;
+
 export default async function Products() {
-  const products = await getProducts();
+  const initialProducts = await getProducts();
   return (
-    <div className="p-5 flex flex-col gap-5">
-      {products.map((product) => (
-        <ListProduct key={product.id} {...product} />
-      ))}
+    <div>
+      <ProductScroll initialProduct={initialProducts}></ProductScroll>
     </div>
   );
 }
