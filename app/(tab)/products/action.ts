@@ -1,4 +1,5 @@
 "use server";
+
 import db from "@/app/lib/db";
 
 export async function getMoreProducts(page: number) {

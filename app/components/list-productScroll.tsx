@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { useState } from "react";
+import { useEffect } from "react";
 
 import ListProduct from "./list-product";
 import { InitialProducts } from "../(tab)/products/page";
@@ -14,24 +16,49 @@ export default function ProductScroll({ initialProduct }: ProductListProps) {
   const [products, setProducts] = useState(initialProduct);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [lastpage, setLastPage] = useState(false);
 
-  const moreClieck = async () => {
-    setLoading(true);
-    // skip 옵션이 적용된 데이터, 즉 초기 데이터 외의 추가 데이터를 가져옵니다.
-    const addProducts = await getMoreProducts(page);
-    // 가져온 추가 데이터를 기존 상품 리스트에 추가
-    setProducts((prevState) => [...prevState, ...addProducts]);
-    //페이지 수 증가
-    setPage((prevPage) => prevPage + 1);
-    setLoading(false);
-  };
+  const trigger = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const observe = new IntersectionObserver(
+      async (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+        const element = entries[0];
+        if (element.isIntersecting && trigger.current) {
+          observe.unobserve(trigger.current);
+          setLoading(true);
+          const newProducts = await getMoreProducts(page);
+          if (newProducts.length !== 0) {
+            setProducts((prevState) => [...prevState, ...newProducts]);
+            setPage((prevPage) => prevPage + 1);
+          } else {
+            setLastPage(true);
+          }
+          setLoading(false);
+        }
+      }
+    );
+    if (trigger.current) {
+      observe.observe(trigger.current);
+    }
+
+    return () => {
+      observe.disconnect();
+    };
+  }, [page]);
 
   return (
     <div className="p-5 flex flex-col gap-5">
       {products.map((product) => (
         <ListProduct key={product.id} {...product} />
       ))}
-      <button onClick={moreClieck}>리스트 더 가져오기</button>
+      <span
+        ref={trigger}
+        style={{ marginTop: `${page + 1 * 300}vh` }}
+        className=" mb-96 text-sm font-semibold bg-orange-500 w-fit mx-auto px-3 py-2 rounded-md hover:opacity-90 active:scale-95"
+      >
+        리스트 더 가져오기
+      </span>
     </div>
   );
 }
